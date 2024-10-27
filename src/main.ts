@@ -75,8 +75,12 @@ let x : number, y : number = 0;
 let activeLine : Line;
 let lines_arr : Line[] = [];
 let redo_stack : Line[] = [];
+let drawingChanged = new Event("drawingChanged");
 
 //Functions - I snagged these off the mousemove documentation: https://developer.mozilla.org/en-US/docs/Web/API/Element/mousemove_event
+canvas.addEventListener("drawingChanged", (e)=>{
+    updateDrawing(ctx)
+});
 canvas.addEventListener("mousedown", (e) => {
     x = e.offsetX;
     y = e.offsetY;
@@ -88,7 +92,7 @@ canvas.addEventListener("mousedown", (e) => {
 canvas.addEventListener("mousemove", (e) => {
   if (isDrawing) {
     activeLine.drag(x, y);
-    drawingChanged(ctx);
+    canvas.dispatchEvent(drawingChanged);
     x = e.offsetX;
     y = e.offsetY;
   }
@@ -96,7 +100,7 @@ canvas.addEventListener("mousemove", (e) => {
 canvas.addEventListener("mouseup", (e) => { //interestingly, in the example, this one uses window instead of canvas. Canvas works just fine though.
   if (isDrawing) {
     activeLine.drag(x, y);
-    drawingChanged(ctx);
+    canvas.dispatchEvent(drawingChanged);
     isDrawing = false;
   }
 });
@@ -108,7 +112,7 @@ redo_btn.addEventListener("click", (e) => {
     redo();
 })
 
-function drawingChanged(context){
+function updateDrawing(context){
     clearCanvas(context);
     context.strokeStyle = "black";
     context.lineWidth = 1;
@@ -131,7 +135,7 @@ function undo(){
     let last_line = lines_arr.pop();
     if(last_line != undefined){
         redo_stack.push(last_line);
-        drawingChanged(ctx);
+        updateDrawing(ctx);
     }
 }
 
@@ -139,6 +143,6 @@ function redo(){
     let last_line = redo_stack.pop();
     if(last_line != undefined){
         lines_arr.push(last_line);
-        drawingChanged(ctx);
+        updateDrawing(ctx);
     }
 }
