@@ -28,6 +28,7 @@ thin_btn.classList.add("selected");
 thick_btn.innerHTML = "thick";
 marker_heading.innerHTML = "marker thickness";
 marker_div.id = "marker_div";
+canvas.style.cursor = "none";
 
 //Adding into the DOM
 app.append(heading);
@@ -45,7 +46,13 @@ marker_div.append(thick_btn);
 interface Point {
     x: number,
     y: number,
-}  
+}
+
+interface Mouse {
+    x: number,
+    y: number,
+    draw(ctx): void;
+}
 
 //Thought we're not meant to have classes in this, I guess we're ditching that here? (For step 5, which explicitly asks for a class)
 class Line {
@@ -86,19 +93,35 @@ if(ctx != null){
     ctx.fillRect(0, 0, width, height);
 }
 let isDrawing = false;
-let x : number, y : number = 0;
+let x : number = 0;
+let y : number = 0;
 let activeLine : Line;
 let lines_arr : Line[] = [];
 let redo_stack : Line[] = [];
-let drawingChanged = new Event("drawingChanged");
 let thick = 5;
 let thin = 1;
 let marker_size = thin;
+let drawingChanged = new Event("drawing-changed");
+let toolMoved = new Event("tool-moved");
+let mouse : Mouse = {
+    x: 0,
+    y: 0,
+    draw: function(ctx){
+        ctx.beginPath();
+        ctx.lineWidth = thin; //just for consistency's sake
+        ctx.arc(this.x, this.y, marker_size, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
 
 //Functions - I snagged these off the mousemove documentation: https://developer.mozilla.org/en-US/docs/Web/API/Element/mousemove_event
-canvas.addEventListener("drawingChanged", (e)=>{
-    updateDrawing(ctx)
+canvas.addEventListener("drawing-changed", (e)=>{
+    updateDrawing(ctx);
 });
+canvas.addEventListener("tool-moved", (e) => {
+    updateDrawing(ctx);
+    mouse.draw(ctx);
+})
 canvas.addEventListener("mousedown", (e) => {
     x = e.offsetX;
     y = e.offsetY;
@@ -108,19 +131,24 @@ canvas.addEventListener("mousedown", (e) => {
     if(redo_stack.length > 0) redo_stack = [];
 });
 canvas.addEventListener("mousemove", (e) => {
-  if (isDrawing) {
-    activeLine.drag(x, y);
-    canvas.dispatchEvent(drawingChanged);
-    x = e.offsetX;
-    y = e.offsetY;
-  }
+    mouse.x = e.offsetX;
+    mouse.y = e.offsetY;
+    if (isDrawing) {
+        activeLine.drag(x, y);
+        canvas.dispatchEvent(drawingChanged);
+        x = e.offsetX;
+        y = e.offsetY;
+    }
+    else{
+        canvas.dispatchEvent(toolMoved);
+    }
 });
 canvas.addEventListener("mouseup", (e) => { //interestingly, in the example, this one uses window instead of canvas. Canvas works just fine though.
-  if (isDrawing) {
-    activeLine.drag(x, y);
-    canvas.dispatchEvent(drawingChanged);
-    isDrawing = false;
-  }
+    if (isDrawing) {
+        activeLine.drag(x, y);
+        canvas.dispatchEvent(drawingChanged);
+        isDrawing = false;
+    }
 });
 
 undo_btn.addEventListener("click", (e) => {
