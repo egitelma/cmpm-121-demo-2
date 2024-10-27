@@ -6,9 +6,14 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 const heading = document.createElement("h1");
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
-const btn_div = document.createElement("div");
+const cmd_div = document.createElement("div");
+const cmd_heading = document.createElement("h3");
 const undo_btn = document.createElement("button");
-const redo_btn = document.createElement("button"); //Getting a bit of a smell from this... Fowler says three strikes, though!
+const redo_btn = document.createElement("button");
+const marker_div = document.createElement("div");
+const marker_heading = document.createElement("h3");
+const thin_btn = document.createElement("button");
+const thick_btn = document.createElement("button");
 
 //Defining properties
 document.title = APP_NAME;
@@ -16,34 +21,44 @@ heading.innerHTML = APP_NAME;
 canvas.id = "canvas";
 undo_btn.innerHTML = "undo";
 redo_btn.innerHTML = "redo";
-btn_div.id = "btn_div";
+cmd_heading.innerHTML = "commands";
+cmd_div.id = "btn_div";
+thin_btn.innerHTML = "thin";
+thin_btn.classList.add("selected");
+thick_btn.innerHTML = "thick";
+marker_heading.innerHTML = "marker thickness";
+marker_div.id = "marker_div";
 
 //Adding into the DOM
 app.append(heading);
 app.append(canvas);
-app.append(btn_div);
-btn_div.append(undo_btn);
-btn_div.append(redo_btn);
+app.append(cmd_div);
+app.append(marker_div);
+cmd_div.append(cmd_heading);
+cmd_div.append(undo_btn);
+cmd_div.append(redo_btn);
+marker_div.append(marker_heading);
+marker_div.append(thin_btn);
+marker_div.append(thick_btn);
 
 //Point interface
 interface Point {
     x: number,
     y: number,
-}
+}  
 
 //Thought we're not meant to have classes in this, I guess we're ditching that here? (For step 5, which explicitly asks for a class)
 class Line {
-    initial_x : number;
-    initial_y : number;
-    end_x : number;
-    end_y : number;
+    thickness: number;
     points_arr: Point[];
-    constructor(start_x : number, start_y : number){
+    constructor(start_x : number, start_y : number, thickness){
         let new_pt : Point = {x: start_x, y: start_y}
         this.points_arr = [];
         this.points_arr.push(new_pt);
+        this.thickness = thickness;
     }
     display(ctx : CanvasRenderingContext2D){
+        ctx.lineWidth = this.thickness;
         let last_pt : Point = this.points_arr[0];
         for(let current_pt of this.points_arr){
             this.drawLine(ctx, last_pt, current_pt); //wow that's WAY cleaner.
@@ -76,6 +91,9 @@ let activeLine : Line;
 let lines_arr : Line[] = [];
 let redo_stack : Line[] = [];
 let drawingChanged = new Event("drawingChanged");
+let thick = 5;
+let thin = 1;
+let marker_size = thin;
 
 //Functions - I snagged these off the mousemove documentation: https://developer.mozilla.org/en-US/docs/Web/API/Element/mousemove_event
 canvas.addEventListener("drawingChanged", (e)=>{
@@ -84,7 +102,7 @@ canvas.addEventListener("drawingChanged", (e)=>{
 canvas.addEventListener("mousedown", (e) => {
     x = e.offsetX;
     y = e.offsetY;
-    activeLine = new Line(x, y);
+    activeLine = new Line(x, y, marker_size);
     lines_arr.push(activeLine);
     isDrawing = true;
     if(redo_stack.length > 0) redo_stack = [];
@@ -110,6 +128,21 @@ undo_btn.addEventListener("click", (e) => {
 })
 redo_btn.addEventListener("click", (e) => {
     redo();
+})
+
+thin_btn.addEventListener("click", (e) => {
+    if(marker_size == thick){
+        marker_size = thin;
+        thick_btn.classList.remove("selected");
+        thin_btn.classList.add("selected");
+    }
+})
+thick_btn.addEventListener("click", (e) => {
+    if(marker_size == thin){
+        marker_size = thick;
+        thin_btn.classList.remove("selected");
+        thick_btn.classList.add("selected");
+    }
 })
 
 function updateDrawing(context){

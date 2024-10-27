@@ -100,10 +100,17 @@ button:focus-visible {
   filter: drop-shadow(5px 5px 15px);
 }
 
-#btn_div {
-  margin-top: 20px;
+#btn_div, #marker_div {
   button {
     background-color: lightgray;
     margin: 5px;
+  }
+  .selected {
+    background-color: gray;
+  }
+  h3 {
+    margin-top: 20px;
+    margin-bottom: 5px;
+    font-weight: bold;
   }
 }
