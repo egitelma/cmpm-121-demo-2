@@ -17,11 +17,22 @@ const marker_heading = document.createElement("h3");
 const thin_btn = document.createElement("button");
 const thick_btn = document.createElement("button");
 
+interface StickerButton{
+    div_container: HTMLDivElement,
+    button_element: HTMLButtonElement,
+    content: string,
+    index: number
+}
+let stickers : string[] = ["❤", "💥", "✌"];
+let sticker_btns : StickerButton[] = [];
+
 const sticker_div = document.createElement("div");
 const sticker_heading = document.createElement("h3");
-const stick1_btn = document.createElement("button");
-const stick2_btn = document.createElement("button");
-const stick3_btn = document.createElement("button");
+sticker_div.append(sticker_heading);
+for(let i=0; i<stickers.length; i++){
+    addNewSticker(i);
+}
+const custom_sticker = document.createElement("button");
 
 //Defining properties
 document.title = APP_NAME;
@@ -39,11 +50,10 @@ thick_btn.innerHTML = "thick";
 marker_heading.innerHTML = "marker thickness";
 marker_div.id = "marker_div";
 
-stick1_btn.innerHTML = "❤";
-stick2_btn.innerHTML = "💥";
-stick3_btn.innerHTML = "✌";
 sticker_heading.innerHTML = "sticker type";
+custom_sticker.innerHTML = "custom";
 sticker_div.id = "sticker_div";
+custom_sticker.id = "custom";
 
 canvas.style.cursor = "none";
 
@@ -62,12 +72,9 @@ marker_div.append(marker_heading);
 marker_div.append(thin_btn);
 marker_div.append(thick_btn);
 
-sticker_div.append(sticker_heading);
-sticker_div.append(stick1_btn);
-sticker_div.append(stick2_btn);
-sticker_div.append(stick3_btn);
+sticker_div.append(document.createElement("br"));
+app.append(custom_sticker);
 
-//Point interface
 interface Point {
     x: number,
     y: number,
@@ -141,13 +148,10 @@ let lines_arr : (Line | Sticker)[] = [];
 let redo_stack : (Line | Sticker)[] = [];
 let thick = 5;
 let thin = 1;
-let stick1 = "❤";
-let stick2 = "💥";
-let stick3 = "✌";
 let marker_size = thin;
 let marker = "marker";
 let sticker = "sticker";
-let sticker_type = stick1;
+let sticker_type = stickers[0];
 let mark_style = "marker";
 let drawingChanged = new Event("drawing-changed");
 let toolMoved = new Event("tool-moved");
@@ -203,22 +207,21 @@ canvas.addEventListener("mousemove", (e) => {
         canvas.dispatchEvent(toolMoved);
     }
 });
-canvas.addEventListener("mouseup", (e) => {
+canvas.addEventListener("mouseup", () => {
     if (isDrawing) {
-        // activeLine.drag(x, y);
         canvas.dispatchEvent(drawingChanged);
         isDrawing = false;
     }
 });
 
-undo_btn.addEventListener("click", (e) => {
+undo_btn.addEventListener("click", () => {
     undo();
 })
-redo_btn.addEventListener("click", (e) => {
+redo_btn.addEventListener("click", () => {
     redo();
 })
 
-thin_btn.addEventListener("click", (e) => {
+thin_btn.addEventListener("click", () => {
     thin_btn.classList.add("selected");
     if(marker_size == thick){
         marker_size = thin;
@@ -226,12 +229,12 @@ thin_btn.addEventListener("click", (e) => {
     }
     if(mark_style == sticker){
         mark_style = marker;
-        stick1_btn.classList.remove("selected");
-        stick2_btn.classList.remove("selected");
-        stick3_btn.classList.remove("selected");
+        for(let stick_btn of sticker_btns){
+            stick_btn.button_element.classList.remove("selected");
+        }
     }
 })
-thick_btn.addEventListener("click", (e) => {
+thick_btn.addEventListener("click", () => {
     thick_btn.classList.add("selected");
     if(marker_size == thin){
         marker_size = thick;
@@ -239,51 +242,15 @@ thick_btn.addEventListener("click", (e) => {
     }
     if(mark_style == sticker){
         mark_style = marker;
-        stick1_btn.classList.remove("selected");
-        stick2_btn.classList.remove("selected");
-        stick3_btn.classList.remove("selected");
+        for(let stick_btn of sticker_btns){
+            stick_btn.button_element.classList.remove("selected");
+        }
     }
 })
-//i will make this nicer later I JUST NEED TO GET IT DONE. sigh. feels bad man
-stick1_btn.addEventListener("click", (e) => {
-    stick1_btn.classList.add("selected");
-    sticker_type = stick1;
-    if(mark_style == marker){
-        mark_style = sticker;
-        thin_btn.classList.remove("selected");
-        thick_btn.classList.remove("selected");
-    }
-    else{
-        stick2_btn.classList.remove("selected");
-        stick3_btn.classList.remove("selected");
-    }
-})
-stick2_btn.addEventListener("click", (e) => {
-    stick2_btn.classList.add("selected");
-    sticker_type = stick2;
-    if(mark_style == marker){
-        mark_style = sticker;
-        thin_btn.classList.remove("selected");
-        thick_btn.classList.remove("selected");
-    }
-    else{
-        stick1_btn.classList.remove("selected");
-        stick3_btn.classList.remove("selected");
-    }
-})
-stick3_btn.addEventListener("click", (e) => {
-    stick3_btn.classList.add("selected");
-    sticker_type = stick3;
-    if(mark_style == marker){
-        mark_style = sticker;
-        thin_btn.classList.remove("selected");
-        thick_btn.classList.remove("selected");
-    }
-    else{
-        stick1_btn.classList.remove("selected");
-        stick3_btn.classList.remove("selected");
-    }
-})
+
+custom_sticker.addEventListener("click", () => {
+    addCustomSticker();
+});
 
 //Functions
 function updateDrawing(context){
@@ -318,5 +285,50 @@ function redo(){
     if(last_line != undefined){
         lines_arr.push(last_line);
         updateDrawing(ctx);
+    }
+}
+
+function addNewSticker(index : number){
+    let new_sticker = addStickerInterface(index);
+    addStickerEvent(new_sticker);
+}
+
+function addStickerInterface(index : number){
+    let new_btn : StickerButton = {
+        div_container: sticker_div,
+        button_element: document.createElement("button"),
+        content: stickers[index],
+        index: index
+    }
+    new_btn.button_element.innerHTML = new_btn.content;
+    sticker_btns.push(new_btn);
+    sticker_div.append(new_btn.button_element);
+    return new_btn;
+}
+
+function addStickerEvent(stick_btn : StickerButton){
+    stick_btn.button_element.addEventListener("click", (e) => {
+        stick_btn.button_element.classList.add("selected");
+        sticker_type = stick_btn.content;
+        if(mark_style == marker){
+            mark_style = sticker;
+            thin_btn.classList.remove("selected");
+            thick_btn.classList.remove("selected");
+        }
+        else{
+            for(let i=0; i<sticker_btns.length; i++){ //Jesus H. Christ.
+                if(i != stick_btn.index){
+                    sticker_btns[i].button_element.classList.remove("selected"); //ohhh yeah baby that's a chain if i've ever seen one
+                }
+            }
+        }
+    })
+}
+
+function addCustomSticker(){
+    let emoji = prompt("Enter an emoji to use as a sticker");
+    if(emoji != null && !stickers.includes(emoji)){
+        stickers.push(emoji);
+        addNewSticker(stickers.length-1);
     }
 }
