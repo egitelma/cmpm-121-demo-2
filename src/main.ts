@@ -9,6 +9,9 @@ const ctx = canvas.getContext("2d");
 
 const export_btn = document.createElement("button");
 
+const main_div = document.createElement("div");
+const side_div = document.createElement("div");
+
 const cmd_div = document.createElement("div");
 const cmd_heading = document.createElement("h3");
 const undo_btn = document.createElement("button");
@@ -24,6 +27,8 @@ interface StickerButton{
     button_element: HTMLButtonElement,
     content: string,
     index: number
+    select(): void,
+    deselect(): void
 }
 let stickers : string[] = ["❤", "💥", "✌"];
 let sticker_btns : StickerButton[] = [];
@@ -63,12 +68,14 @@ export_btn.innerHTML = "export";
 canvas.style.cursor = "none";
 
 //Adding into the DOM
-app.append(heading);
-app.append(export_btn);
-app.append(canvas);
-app.append(cmd_div);
-app.append(marker_div);
-app.append(sticker_div);
+app.append(main_div);
+app.append(side_div);
+main_div.append(heading);
+main_div.append(export_btn);
+main_div.append(canvas);
+side_div.append(cmd_div);
+side_div.append(marker_div);
+side_div.append(sticker_div);
 
 cmd_div.append(cmd_heading);
 cmd_div.append(undo_btn);
@@ -78,8 +85,7 @@ marker_div.append(marker_heading);
 marker_div.append(thin_btn);
 marker_div.append(thick_btn);
 
-sticker_div.append(document.createElement("br"));
-app.append(custom_sticker);
+side_div.append(custom_sticker);
 
 interface Point {
     x: number,
@@ -101,7 +107,7 @@ class Sticker {
     }
     display(ctx : CanvasRenderingContext2D){
         ctx.fillStyle = "black";
-        ctx.font = "48px monospace";
+        ctx.font = "36px monospace";
         ctx.fillText(this.type, this.location.x, this.location.y);
     }
     drag(new_x : number, new_y : number){
@@ -149,8 +155,8 @@ if(ctx != null){
 let isDrawing = false;
 let x : number = 0;
 let y : number = 0;
-let activeLine : Line | Sticker;
-let lines_arr : (Line | Sticker)[] = [];
+let activeItem : Line | Sticker;
+let items_arr : (Line | Sticker)[] = [];
 let redo_stack : (Line | Sticker)[] = [];
 let thick = 5;
 let thin = 1;
@@ -173,7 +179,7 @@ let mouse : Mouse = {
         }
         else{
             ctx.fillStyle = "black";
-            ctx.font = "50px monospace";
+            ctx.font = "48px monospace";
             ctx.fillText(sticker_type, this.x, this.y);
         }
     }
@@ -191,12 +197,12 @@ canvas.addEventListener("mousedown", (e) => {
     x = e.offsetX;
     y = e.offsetY;
     if(mark_style == marker){
-        activeLine = new Line(x, y, marker_size);
+        activeItem = new Line(x, y, marker_size);
     }
     else{
-        activeLine = new Sticker(x, y, sticker_type);
+        activeItem = new Sticker(x, y, sticker_type);
     }
-    lines_arr.push(activeLine);
+    items_arr.push(activeItem);
     isDrawing = true;
     if(redo_stack.length > 0) redo_stack = [];
 });
@@ -204,7 +210,7 @@ canvas.addEventListener("mousemove", (e) => {
     mouse.x = e.offsetX;
     mouse.y = e.offsetY;
     if (isDrawing) {
-        activeLine.drag(x, y);
+        activeItem.drag(x, y);
         canvas.dispatchEvent(drawingChanged);
         x = e.offsetX;
         y = e.offsetY;
@@ -287,23 +293,23 @@ function clearCanvas(context){
 }
 
 function redrawPts(context){
-    for(let line of lines_arr){
-        line.display(context);
+    for(let item of items_arr){
+        item.display(context);
     }
 }
 
 function undo(){
-    let last_line = lines_arr.pop();
-    if(last_line != undefined){
-        redo_stack.push(last_line);
+    let last_item = items_arr.pop();
+    if(last_item != undefined){
+        redo_stack.push(last_item);
         updateDrawing(ctx);
     }
 }
 
 function redo(){
-    let last_line = redo_stack.pop();
-    if(last_line != undefined){
-        lines_arr.push(last_line);
+    let last_item = redo_stack.pop();
+    if(last_item != undefined){
+        items_arr.push(last_item);
         updateDrawing(ctx);
     }
 }
@@ -318,7 +324,13 @@ function addStickerInterface(index : number){
         div_container: sticker_div,
         button_element: document.createElement("button"),
         content: stickers[index],
-        index: index
+        index: index,
+        select: function(){
+            this.button_element.classList.add("selected");
+        },
+        deselect: function(){
+            this.button_element.classList.remove("selected");
+        }
     }
     new_btn.button_element.innerHTML = new_btn.content;
     sticker_btns.push(new_btn);
@@ -328,7 +340,7 @@ function addStickerInterface(index : number){
 
 function addStickerEvent(stick_btn : StickerButton){
     stick_btn.button_element.addEventListener("click", (e) => {
-        stick_btn.button_element.classList.add("selected");
+        stick_btn.select();
         sticker_type = stick_btn.content;
         if(mark_style == marker){
             mark_style = sticker;
