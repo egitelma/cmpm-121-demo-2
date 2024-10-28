@@ -7,6 +7,8 @@ const heading = document.createElement("h1");
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d");
 
+const export_btn = document.createElement("button");
+
 const cmd_div = document.createElement("div");
 const cmd_heading = document.createElement("h3");
 const undo_btn = document.createElement("button");
@@ -55,10 +57,14 @@ custom_sticker.innerHTML = "custom";
 sticker_div.id = "sticker_div";
 custom_sticker.id = "custom";
 
+export_btn.id = "export";
+export_btn.innerHTML = "export";
+
 canvas.style.cursor = "none";
 
 //Adding into the DOM
 app.append(heading);
+app.append(export_btn);
 app.append(canvas);
 app.append(cmd_div);
 app.append(marker_div);
@@ -251,6 +257,20 @@ thick_btn.addEventListener("click", () => {
 custom_sticker.addEventListener("click", () => {
     addCustomSticker();
 });
+
+export_btn.addEventListener("click", () => {
+    let multiplier = 4;
+    let new_canvas = document.createElement("canvas");
+    new_canvas.width = width * multiplier;
+    new_canvas.height = height * multiplier;
+    let new_ctx = new_canvas.getContext("2d");
+    new_ctx?.scale(multiplier, multiplier);
+    updateDrawing(new_ctx);
+    const anchor = document.createElement("a");
+    anchor.href = new_canvas.toDataURL("image/png");
+    anchor.download = "sketchpad_copy.png";
+    anchor.click();
+})
 
 //Functions
 function updateDrawing(context){
