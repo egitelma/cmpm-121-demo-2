@@ -100,7 +100,7 @@ button:focus-visible {
   filter: drop-shadow(5px 5px 15px);
 }
 
-#btn_div, #marker_div {
+#btn_div, #marker_div, #sticker_div {
   button {
     background-color: lightgray;
     margin: 5px;
