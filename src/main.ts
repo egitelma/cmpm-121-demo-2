@@ -76,6 +76,7 @@ main_div.append(canvas);
 side_div.append(cmd_div);
 side_div.append(marker_div);
 side_div.append(sticker_div);
+side_div.append(custom_sticker);
 
 cmd_div.append(cmd_heading);
 cmd_div.append(undo_btn);
@@ -84,8 +85,6 @@ cmd_div.append(redo_btn);
 marker_div.append(marker_heading);
 marker_div.append(thin_btn);
 marker_div.append(thick_btn);
-
-side_div.append(custom_sticker);
 
 interface Point {
     x: number,
@@ -118,13 +117,16 @@ class Sticker {
 class Line {
     thickness: number;
     points_arr: Point[];
-    constructor(start_x : number, start_y : number, thickness){
+    color: string;
+    constructor(start_x : number, start_y : number, thickness, color){
         let new_pt : Point = {x: start_x, y: start_y}
         this.points_arr = [];
         this.points_arr.push(new_pt);
         this.thickness = thickness;
+        this.color = color;
     }
     display(ctx : CanvasRenderingContext2D){
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = this.thickness;
         let last_pt : Point = this.points_arr[0];
         for(let current_pt of this.points_arr){
@@ -158,20 +160,26 @@ let y : number = 0;
 let activeItem : Line | Sticker;
 let items_arr : (Line | Sticker)[] = [];
 let redo_stack : (Line | Sticker)[] = [];
+
 let thick = 5;
 let thin = 1;
 let marker_size = thin;
+let colors = ["pink", "purple", "red", "blue", "green", "orange", "gray", "black"]
+let marker_color = colors[0];
 let marker = "marker";
 let sticker = "sticker";
 let sticker_type = stickers[0];
 let mark_style = "marker";
+
 let drawingChanged = new Event("drawing-changed");
 let toolMoved = new Event("tool-moved");
+
 let mouse : Mouse = {
     x: 0,
     y: 0,
     draw: function(ctx){
         if(mark_style == marker){
+            ctx.strokeStyle = marker_color;
             ctx.beginPath();
             ctx.lineWidth = thin;
             ctx.arc(this.x, this.y, marker_size, 0, Math.PI * 2);
@@ -197,7 +205,7 @@ canvas.addEventListener("mousedown", (e) => {
     x = e.offsetX;
     y = e.offsetY;
     if(mark_style == marker){
-        activeItem = new Line(x, y, marker_size);
+        activeItem = new Line(x, y, marker_size, marker_color);
     }
     else{
         activeItem = new Sticker(x, y, sticker_type);
@@ -235,6 +243,7 @@ redo_btn.addEventListener("click", () => {
 
 thin_btn.addEventListener("click", () => {
     thin_btn.classList.add("selected");
+    marker_color = colors[Math.floor(Math.random() * colors.length)];
     if(marker_size == thick){
         marker_size = thin;
         thick_btn.classList.remove("selected");
@@ -248,6 +257,7 @@ thin_btn.addEventListener("click", () => {
 })
 thick_btn.addEventListener("click", () => {
     thick_btn.classList.add("selected");
+    marker_color = colors[Math.floor(Math.random() * colors.length)];
     if(marker_size == thin){
         marker_size = thick;
         thin_btn.classList.remove("selected");
@@ -281,7 +291,6 @@ export_btn.addEventListener("click", () => {
 //Functions
 function updateDrawing(context){
     clearCanvas(context);
-    context.strokeStyle = "black";
     context.lineWidth = 1;
     redrawPts(context);
 }
