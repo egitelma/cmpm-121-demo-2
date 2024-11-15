@@ -14,6 +14,7 @@ const side_div = document.createElement("div");
 
 const cmd_div = document.createElement("div");
 const cmd_heading = document.createElement("h3");
+const clear_btn = document.createElement("button");
 const undo_btn = document.createElement("button");
 const redo_btn = document.createElement("button");
 
@@ -46,6 +47,7 @@ document.title = APP_NAME;
 heading.innerHTML = APP_NAME;
 canvas.id = "canvas";
 
+clear_btn.innerHTML = "clear";
 undo_btn.innerHTML = "undo";
 redo_btn.innerHTML = "redo";
 cmd_heading.innerHTML = "commands";
@@ -79,6 +81,7 @@ side_div.append(sticker_div);
 side_div.append(custom_sticker);
 
 cmd_div.append(cmd_heading);
+cmd_div.append(clear_btn);
 cmd_div.append(undo_btn);
 cmd_div.append(redo_btn);
 
@@ -158,7 +161,7 @@ let isDrawing = false;
 let x : number = 0;
 let y : number = 0;
 let activeItem : Line | Sticker;
-const items_arr : (Line | Sticker)[] = [];
+let items_arr : (Line | Sticker)[] = [];
 let redo_stack : (Line | Sticker)[] = [];
 
 const thick = 5;
@@ -234,6 +237,10 @@ canvas.addEventListener("mouseup", () => {
     }
 });
 
+clear_btn.addEventListener("click", () => {
+    clear();
+})
+
 undo_btn.addEventListener("click", () => {
     undo();
 })
@@ -304,6 +311,14 @@ function clearCanvas(context){
 function redrawPts(context){
     for(const item of items_arr){
         item.display(context);
+    }
+}
+
+function clear(){
+    if(items_arr.length > 0) {
+        items_arr = [];
+        redo_stack = [];
+        updateDrawing(ctx);
     }
 }
 
