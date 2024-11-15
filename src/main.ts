@@ -30,8 +30,8 @@ interface StickerButton{
     select(): void,
     deselect(): void
 }
-let stickers : string[] = ["❤", "💥", "✌"];
-let sticker_btns : StickerButton[] = [];
+const stickers : string[] = ["❤", "💥", "✌"];
+const sticker_btns : StickerButton[] = [];
 
 const sticker_div = document.createElement("div");
 const sticker_heading = document.createElement("h3");
@@ -118,8 +118,8 @@ class Line {
     thickness: number;
     points_arr: Point[];
     color: string;
-    constructor(start_x : number, start_y : number, thickness, color){
-        let new_pt : Point = {x: start_x, y: start_y}
+    constructor(start_x : number, start_y : number, thickness: number, color: string){
+        const new_pt : Point = {x: start_x, y: start_y}
         this.points_arr = [];
         this.points_arr.push(new_pt);
         this.thickness = thickness;
@@ -129,7 +129,7 @@ class Line {
         ctx.strokeStyle = this.color;
         ctx.lineWidth = this.thickness;
         let last_pt : Point = this.points_arr[0];
-        for(let current_pt of this.points_arr){
+        for(const current_pt of this.points_arr){
             this.drawLine(ctx, last_pt, current_pt); //wow that's WAY cleaner.
             last_pt = current_pt;
         }
@@ -142,14 +142,14 @@ class Line {
         ctx.closePath();
     }
     drag(new_x : number, new_y : number){
-        let new_pt : Point = {x: new_x, y: new_y};
+        const new_pt : Point = {x: new_x, y: new_y};
         this.points_arr.push(new_pt);
     }
 }
 
 //Establishing some canvas variables
-let width = canvas.width = 256;
-let height = canvas.height = 256;
+const width = canvas.width = 256;
+const height = canvas.height = 256;
 if(ctx != null){
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, width, height);
@@ -158,23 +158,23 @@ let isDrawing = false;
 let x : number = 0;
 let y : number = 0;
 let activeItem : Line | Sticker;
-let items_arr : (Line | Sticker)[] = [];
+const items_arr : (Line | Sticker)[] = [];
 let redo_stack : (Line | Sticker)[] = [];
 
-let thick = 5;
-let thin = 1;
+const thick = 5;
+const thin = 1;
 let marker_size = thin;
-let colors = ["pink", "purple", "red", "blue", "green", "orange", "gray", "black"]
+const colors = ["pink", "purple", "red", "blue", "green", "orange", "gray", "black"]
 let marker_color = colors[0];
-let marker = "marker";
-let sticker = "sticker";
+const marker = "marker";
+const sticker = "sticker";
 let sticker_type = stickers[0];
 let mark_style = "marker";
 
-let drawingChanged = new Event("drawing-changed");
-let toolMoved = new Event("tool-moved");
+const drawingChanged = new Event("drawing-changed");
+const toolMoved = new Event("tool-moved");
 
-let mouse : Mouse = {
+const mouse : Mouse = {
     x: 0,
     y: 0,
     draw: function(ctx){
@@ -194,10 +194,10 @@ let mouse : Mouse = {
 }
 
 //Event listeners
-canvas.addEventListener("drawing-changed", (e)=>{
+canvas.addEventListener("drawing-changed", ()=>{
     updateDrawing(ctx);
 });
-canvas.addEventListener("tool-moved", (e) => {
+canvas.addEventListener("tool-moved", () => {
     updateDrawing(ctx);
     mouse.draw(ctx);
 })
@@ -250,7 +250,7 @@ thin_btn.addEventListener("click", () => {
     }
     if(mark_style == sticker){
         mark_style = marker;
-        for(let stick_btn of sticker_btns){
+        for(const stick_btn of sticker_btns){
             stick_btn.button_element.classList.remove("selected");
         }
     }
@@ -264,7 +264,7 @@ thick_btn.addEventListener("click", () => {
     }
     if(mark_style == sticker){
         mark_style = marker;
-        for(let stick_btn of sticker_btns){
+        for(const stick_btn of sticker_btns){
             stick_btn.button_element.classList.remove("selected");
         }
     }
@@ -275,11 +275,11 @@ custom_sticker.addEventListener("click", () => {
 });
 
 export_btn.addEventListener("click", () => {
-    let multiplier = 4;
-    let new_canvas = document.createElement("canvas");
+    const multiplier = 4;
+    const new_canvas = document.createElement("canvas");
     new_canvas.width = width * multiplier;
     new_canvas.height = height * multiplier;
-    let new_ctx = new_canvas.getContext("2d");
+    const new_ctx = new_canvas.getContext("2d");
     new_ctx?.scale(multiplier, multiplier);
     updateDrawing(new_ctx);
     const anchor = document.createElement("a");
@@ -302,13 +302,13 @@ function clearCanvas(context){
 }
 
 function redrawPts(context){
-    for(let item of items_arr){
+    for(const item of items_arr){
         item.display(context);
     }
 }
 
 function undo(){
-    let last_item = items_arr.pop();
+    const last_item = items_arr.pop();
     if(last_item != undefined){
         redo_stack.push(last_item);
         updateDrawing(ctx);
@@ -316,7 +316,7 @@ function undo(){
 }
 
 function redo(){
-    let last_item = redo_stack.pop();
+    const last_item = redo_stack.pop();
     if(last_item != undefined){
         items_arr.push(last_item);
         updateDrawing(ctx);
@@ -324,12 +324,12 @@ function redo(){
 }
 
 function addNewSticker(index : number){
-    let new_sticker = addStickerInterface(index);
+    const new_sticker = addStickerInterface(index);
     addStickerEvent(new_sticker);
 }
 
 function addStickerInterface(index : number){
-    let new_btn : StickerButton = {
+    const new_btn : StickerButton = {
         div_container: sticker_div,
         button_element: document.createElement("button"),
         content: stickers[index],
@@ -348,7 +348,7 @@ function addStickerInterface(index : number){
 }
 
 function addStickerEvent(stick_btn : StickerButton){
-    stick_btn.button_element.addEventListener("click", (e) => {
+    stick_btn.button_element.addEventListener("click", () => {
         stick_btn.select();
         sticker_type = stick_btn.content;
         if(mark_style == marker){
@@ -367,7 +367,7 @@ function addStickerEvent(stick_btn : StickerButton){
 }
 
 function addCustomSticker(){
-    let emoji = prompt("Enter an emoji to use as a sticker");
+    const emoji = prompt("Enter an emoji to use as a sticker");
     if(emoji != null && !stickers.includes(emoji)){
         stickers.push(emoji);
         addNewSticker(stickers.length-1);
